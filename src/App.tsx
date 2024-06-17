@@ -1,10 +1,9 @@
 import '@mantine/core/styles/global.css';
 
-// import '@mantine/core/styles/Popover.css';
-// import '@mantine/core/styles/Group.css';
-// import '@mantine/core/styles/Loader.css';
-// import '@mantine/core/styles/Input.css';
-// import '@mantine/core/styles/Flex.css';
+import '@mantine/core/styles/Popover.css';
+import '@mantine/core/styles/Group.css';
+import '@mantine/core/styles/Loader.css';
+import '@mantine/core/styles/Flex.css';
 
 import '@mantine/core/styles/Overlay.css';
 import '@mantine/core/styles/ModalBase.css';
@@ -16,38 +15,54 @@ import '@mantine/core/styles/Button.css';
 import '@mantine/core/styles/Paper.css';
 import '@mantine/core/styles/Input.css';
 
-import { AppShell, Button, CheckIcon, CloseIcon, MantineProvider, Modal, Paper, Title } from "@mantine/core";
+import { AppShell, Button, CheckIcon, CloseIcon, Flex, MantineProvider, Paper, Title } from "@mantine/core";
 import { theme } from "./theme";
 import { InputSection } from './components/InputSection';
 import { useEffect, useLayoutEffect, useState } from 'react';
 import { initApp, resetUI, signUserOut, startUI } from '../firebase';
 
+import fakeSiteData from '../fakesitedata.json';
+import { User } from 'firebase/auth';
+import { SectionData, SiteContentData } from './types';
+import { LoginWindow } from './components/LoginWindow';
+
+const FAKE_SITE_DATA = fakeSiteData.sites['WagsworthSiteID'].liveData as SiteContentData;
+const FAKE_SITE_DATA_SECTIONS = Object.values(FAKE_SITE_DATA.sections).filter(x => typeof x === 'object').sort((a, b) => a.order - b.order) as SectionData[];
+
+console.warn('FAKE_SITE_DATA_SECTIONS', FAKE_SITE_DATA_SECTIONS);
+
 export default function App() {
   const [loading, setLoading] = useState(true);
-  const [userData, setUserData] = useState(null as any);
-  const [siteData, setSiteData] = useState(null as any);
+  const [userData, setUserData] = useState<User | null>(null);
+  const [siteData, setSiteData] = useState<SiteContentData | null>(null);
 
   const checkForLoggedInUser = async () => {
-    console.log('calling initApp');
-    const signedInUser = await initApp();
-    console.log('signed in user', signedInUser)
-    if (!signedInUser) {
-      startUI();
-    } else {
-      console.log('setting user to', signedInUser)
-      setUserData(signedInUser)
+    try {
+      console.log('calling initApp');
+      const signedInUser = await initApp() as User;
+      console.log('found signed in user', signedInUser);
+
+      if (signedInUser) {
+        console.log('setting user to', signedInUser);
+        setUserData(signedInUser);
+        console.log('setting data to', fakeSiteData);
+        setSiteData(FAKE_SITE_DATA)
+      } else {
+        startUI();
+      }
+    } catch (error) {
+      console.error('Error during authentication:', error);
     }
-  }
+  };
 
   useLayoutEffect(() => {
-    // setLoading(false);
-    window.addEventListener('load', () => { 
+    window.addEventListener('load', () => {
       console.warn('setting loading false');
       setLoading(false);
     })
   }, []);
 
-  useEffect(() => {
+  useEffect(() => {    
     checkForLoggedInUser();
   }, []);
 
@@ -57,11 +72,10 @@ export default function App() {
         layout='alt'
         header={{ height: '4rem', }}
         footer={{ height: '6rem' }}
-        padding='xs'
         styles={theme => ({
           root: {
-            backgroundColor: theme.colors.gray[7],
-            color: theme.white
+            backgroundColor: theme.black,
+            color: theme.white,
           }
         })}
       >
@@ -90,9 +104,18 @@ export default function App() {
         </AppShell.Header>
         <AppShell.Main>
           {siteData ?
-            <InputSection
-              sectionData={null}
-            />
+            <Flex
+              display={'flex'}
+              direction={'column'}
+              gap={'0.2rem'}
+            >
+              {Object.values(FAKE_SITE_DATA_SECTIONS).map(section => (
+                <InputSection
+                  key={section.href}
+                  sectionData={section}
+                />
+              ))}
+            </Flex>
             :
             userData ?
               <Paper
@@ -111,26 +134,12 @@ export default function App() {
               >
                 <h2>{userData.displayName} is logged in!</h2>
               </Paper>
-              : true &&
-              <Modal
-                opened={(!loading && !userData && !siteData)}
-                onClose={() => { }}
-                centered
-                title={'Log in'}
-                withCloseButton={false}
-                size={'max-content'}
-                styles={{
-                  header: { paddingTop: '2rem', backgroundColor: 'transparent' },
-                  body: { padding: '0.5rem 0', backgroundColor: 'transparent' },
-                  title: {
-                    width: '100%',
-                    textAlign: 'center',
-                    fontSize: '2rem'
-                  },
-                }}
-              >
-                <div style={{ opacity: loading ? '0.4' : '1' }} id='firebaseAuthContainer'></div>
-              </Modal>
+              : !loading ?
+                <LoginWindow opened={(!userData && !siteData)} />
+                :
+                <h2 style={{ textAlign: 'center', marginTop: '4rem', width: '100%' }}>
+                  loading...
+                </h2>
           }
 
         </AppShell.Main>
@@ -150,18 +159,18 @@ export default function App() {
             leftSection={<CloseIcon size={'14'} />}
             variant='gradient'
             gradient={{ from: 'pink', to: 'red', deg: 135 }}
-            size={'sm'}
+            style={{ width: '40%' }}
           >
-            Revert to last saved
+            Revert
           </Button>
           <Button
             autoContrast
             rightSection={<CheckIcon size={'14'} />}
             variant='gradient'
             gradient={{ from: 'teal', to: 'lime', deg: 135 }}
-            size={'sm'}
+            style={{ width: '40%' }}
           >
-            Save this for real
+            Save
           </Button>
         </AppShell.Footer>
       </AppShell>

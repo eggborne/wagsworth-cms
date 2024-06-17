@@ -55,13 +55,13 @@ interface ImageMetadata {
   width: number;
   alt: string;
   href?: string;
-};
+}
 
 interface NavItem {
   href: string;
   label: string;
   order: number;
-};
+}
 
 interface SectionData {
   href: string;
@@ -69,7 +69,9 @@ interface SectionData {
   note?: Paragraph[];
   order: number;
   bannerImage?: ImageMetadata;
+  slides?: Slide[];
   textContent?: Paragraph[];
+  pricedServices?: PricedService[];
 }
 
 interface ServicesData extends SectionData {
@@ -77,9 +79,7 @@ interface ServicesData extends SectionData {
   slides: Slide[];
 }
 
-interface AboutData extends SectionData {
-  textContent: Paragraph[];
-}
+interface AboutData extends SectionData { }
 
 interface FAQsData extends SectionData {
   questions: Question[];
@@ -91,7 +91,38 @@ interface RequirementsData extends SectionData {
 
 interface ContactData extends SectionData { }
 
+interface SiteContentData {
+  contactInfo: ContactInfo;
+  homePage: HomePageData;
+  images: {
+    gallery: Record<string, ImageMetadata>;
+    logo: Record<string, ImageMetadata>;
+    socialLinks: Record<string, ImageMetadata>;
+    ui: Record<string, ImageMetadata>;
+  };
+  sections: {
+    [key: string]: SectionData | ServicesData | AboutData | FAQsData | RequirementsData | ContactData;
+  };
+  style: Record<string, string | number>;
+  theme: string;
+}
+
+interface siteAuthInfoForUser {
+  lastEdited: number;
+  // plus others?
+}
+
+type userAuthorizedSiteInfo = Record<string, siteAuthInfoForUser>;
+
+interface FullSiteData {
+  authorizedUsers: string[];
+  lastSavedData: SiteContentData;
+  liveData: SiteContentData;
+  testData: SiteContentData;
+  themes: Record<string, Record<string, string | number>>;
+}
+
 export type {
-  ServicesData, AboutData, FAQsData, RequirementsData, ContactData,
+  userAuthorizedSiteInfo, FullSiteData, ServicesData, SiteContentData, AboutData, FAQsData, RequirementsData, ContactData,
   HomePageData, ContactInfo, SectionData, NavItem, ImageMetadata
 };

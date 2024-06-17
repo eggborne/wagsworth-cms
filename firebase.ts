@@ -49,8 +49,8 @@ const resetUI = () => {
   ui.start('#firebaseAuthContainer', uiConfig);
 }
 
-const initApp = () => {
-  return new Promise<firebase.User | null>((resolve) => {
+const initApp = (): Promise<firebase.User | null> => {
+  return new Promise((resolve) => {
     app.auth().onAuthStateChanged(
       (user) => {
         if (user) {
