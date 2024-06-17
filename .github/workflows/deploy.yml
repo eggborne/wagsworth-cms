@@ -1,4 +1,4 @@
-name: Deploy to Web Server
+name: Deploy to FTP Server
 
 on:
   push:
@@ -13,19 +13,11 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Set Up SSH
-      uses: webfactory/ssh-agent@v0.5.3
+    - name: Deploy to FTP
+      uses: SamKirkland/FTP-Deploy-Action@4.1.0
       with:
-        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-    - name: Verify target directory exists
-      run: |
-        ssh -o StrictHostKeyChecking=no -p 22 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "if [ ! -d '${{ secrets.TARGET_DIR }}' ]; then echo 'Directory does not exist'; exit 1; fi"
-
-    - name: Upload files via rsync
-      run: |
-        mkdir -p ~/.ssh
-        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_open_ssh
-        chmod 600 ~/.ssh/id_open_ssh
-        ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
-        rsync -avz -e "ssh -i ~/.ssh/id_open_ssh -o StrictHostKeyChecking=no -p 22" ./dist/ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ secrets.TARGET_DIR }}/
+        server: ${{ secrets.FTP_HOST }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        local-dir: ./dist
+        server-dir:  ${{ secrets.TARGET_DIR }}        
