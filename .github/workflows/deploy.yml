@@ -22,11 +22,7 @@ jobs:
       run: |
         ssh -o StrictHostKeyChecking=no -p 22 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "if [ ! -d '${{ secrets.TARGET_DIR }}' ]; then echo 'Directory does not exist'; exit 1; fi"
 
-    - name: Upload files via SFTP
+    - name: Upload files via rsync
       run: |
-        mkdir -p ~/.ssh
-        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
         ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
-        # Use rsync to deploy the contents of ./dist/ to the specified target directory
         rsync -avz -e "ssh -o StrictHostKeyChecking=no -p 22" ./dist/ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ secrets.TARGET_DIR }}/
