@@ -1,5 +1,8 @@
 {
   "workbench.tree.enableStickyScroll": true,
   "workbench.tree.renderIndentGuides": "always",
-  "workbench.tree.indent": 12
+  "workbench.tree.indent": 12,
+  "github-actions.workflows.pinned.workflows": [
+    ".github/workflows/deploy.yml"
+  ]
 }
