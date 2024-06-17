@@ -1,5 +1,6 @@
 {
-  "name": "vite-min-template",
+  "name": "wagsworth-cms",
+  "homepage": "/cms",
   "private": true,
   "version": "0.0.0",
   "type": "module",
