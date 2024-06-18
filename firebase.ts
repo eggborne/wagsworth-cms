@@ -1,5 +1,4 @@
 import firebase from 'firebase/compat/app';
-import { connectDatabaseEmulator, getDatabase } from 'firebase/database';
 import * as firebaseui from 'firebaseui';
 import 'firebaseui/dist/firebaseui.css';
 
@@ -16,7 +15,7 @@ const firebaseConfig = {
 console.log('using firebaseConfig', firebaseConfig);
 
 const uiConfig = {
-  signInSuccessUrl: '/',
+  signInSuccessUrl: './',
   signInOptions: [
     firebase.auth.EmailAuthProvider.PROVIDER_ID,
     firebase.auth.GoogleAuthProvider.PROVIDER_ID,
@@ -25,19 +24,10 @@ const uiConfig = {
   tosUrl: 'https://google.com/',
   privacyPolicyUrl: function () {
     window.location.assign('https://google.com/');
-  }
+  },  
 };
 
 const app = firebase.initializeApp(firebaseConfig);
-
-
-const database = getDatabase(app);
-
-if (process.env.NODE_ENV === 'development') {
-  console.warn('using emulator for DB')
-  connectDatabaseEmulator(database, "127.0.0.1", 9000);
-}
-
 
 const ui = new firebaseui.auth.AuthUI(firebase.auth());
 const startUI = () => {
@@ -54,10 +44,10 @@ const initApp = (): Promise<firebase.User | null> => {
     app.auth().onAuthStateChanged(
       (user) => {
         if (user) {
-          console.log('---> User is signed in!', user);
+          console.log('User is signed in!', user);
           resolve(user); // Resolve the promise with the user object
         } else {
-          console.log('NOT SIGNED IN!');
+          console.log('User is NOT SIGNED IN!');
           resolve(null); // Resolve the promise with null if no user
         }
       },

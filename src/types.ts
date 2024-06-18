@@ -72,10 +72,12 @@ interface SectionData {
   slides?: Slide[];
   textContent?: Paragraph[];
   pricedServices?: PricedService[];
+  pricedServicesLabel?: string;
 }
 
 interface ServicesData extends SectionData {
   pricedServices: PricedService[];
+  pricedServicesLabel: string;
   slides: Slide[];
 }
 
@@ -100,6 +102,10 @@ interface SiteContentData {
     socialLinks: Record<string, ImageMetadata>;
     ui: Record<string, ImageMetadata>;
   };
+  metaInfo: {
+    siteName: string,
+    siteUrl: string,
+  },
   sections: {
     [key: string]: SectionData | ServicesData | AboutData | FAQsData | RequirementsData | ContactData;
   };
@@ -112,7 +118,7 @@ interface siteAuthInfoForUser {
   // plus others?
 }
 
-type userAuthorizedSiteInfo = Record<string, siteAuthInfoForUser>;
+type UserAuthorizedSiteInfo = Record<string, siteAuthInfoForUser>;
 
 interface FullSiteData {
   authorizedUsers: string[];
@@ -122,7 +128,19 @@ interface FullSiteData {
   themes: Record<string, Record<string, string | number>>;
 }
 
+interface UserData {
+  email: string;
+  sites: {
+    lastEdited: number,
+    siteID: string,
+    siteName: string,
+    siteUrl: string,
+  }[];
+  username: string;
+  uid: string;
+}
+
 export type {
-  userAuthorizedSiteInfo, FullSiteData, ServicesData, SiteContentData, AboutData, FAQsData, RequirementsData, ContactData,
+  UserData, UserAuthorizedSiteInfo, FullSiteData, ServicesData, SiteContentData, AboutData, FAQsData, RequirementsData, ContactData,
   HomePageData, ContactInfo, SectionData, NavItem, ImageMetadata
 };

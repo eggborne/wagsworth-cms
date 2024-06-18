@@ -14,39 +14,48 @@ import '@mantine/core/styles/UnstyledButton.css';
 import '@mantine/core/styles/Button.css';
 import '@mantine/core/styles/Paper.css';
 import '@mantine/core/styles/Input.css';
+import '@mantine/core/styles/Text.css';
+import '@mantine/core/styles/Divider.css';
 
-import { AppShell, Button, CheckIcon, CloseIcon, Flex, MantineProvider, Paper, Title } from "@mantine/core";
+import { AppShell, Button, Center, CheckIcon, CloseIcon, Flex, MantineProvider, Paper, Text, Title } from "@mantine/core";
 import { theme } from "./theme";
 import { InputSection } from './components/InputSection';
 import { useEffect, useLayoutEffect, useState } from 'react';
 import { initApp, resetUI, signUserOut, startUI } from '../firebase';
 
-import fakeSiteData from '../fakesitedata.json';
 import { User } from 'firebase/auth';
-import { SectionData, SiteContentData } from './types';
+import { SectionData, SiteContentData, UserData } from './types';
 import { LoginWindow } from './components/LoginWindow';
+import { getSiteData, getSiteMetaInfo, getUserAuthorizedSites, getUserInfo } from './util/db';
 
-const FAKE_SITE_DATA = fakeSiteData.sites['WagsworthSiteID'].liveData as SiteContentData;
-const FAKE_SITE_DATA_SECTIONS = Object.values(FAKE_SITE_DATA.sections).filter(x => typeof x === 'object').sort((a, b) => a.order - b.order) as SectionData[];
-
-console.warn('FAKE_SITE_DATA_SECTIONS', FAKE_SITE_DATA_SECTIONS);
 
 export default function App() {
   const [loading, setLoading] = useState(true);
-  const [userData, setUserData] = useState<User | null>(null);
+  const [userData, setUserData] = useState<UserData | null>(null);
   const [siteData, setSiteData] = useState<SiteContentData | null>(null);
 
   const checkForLoggedInUser = async () => {
     try {
-      console.log('calling initApp');
       const signedInUser = await initApp() as User;
-      console.log('found signed in user', signedInUser);
-
       if (signedInUser) {
-        console.log('setting user to', signedInUser);
-        setUserData(signedInUser);
-        console.log('setting data to', fakeSiteData);
-        setSiteData(FAKE_SITE_DATA)
+        // const userInfo = await getUserInfo(signedInUser.uid);
+        const userInfo = await getUserInfo('SusanAuthId');
+        const userSiteIDs = await getUserAuthorizedSites('SusanAuthId');
+        const sites = [] as any;
+
+        for (const siteID in userSiteIDs) {
+          if (userSiteIDs.hasOwnProperty(siteID)) {
+            const metaInfo = await getSiteMetaInfo(siteID);
+            sites.push({ ...userSiteIDs[siteID], ...metaInfo, siteID });
+          }
+        }
+        const userData: UserData = {
+          ...userInfo,
+          uid: signedInUser.uid,
+          sites,
+        }
+        console.log('setting user to', userData);
+        setUserData(userData);
       } else {
         startUI();
       }
@@ -55,6 +64,13 @@ export default function App() {
     }
   };
 
+  const handleSelectUserSite = async (siteID: string) => {
+    const newSiteData = await getSiteData(siteID, 'liveData');
+    newSiteData.metaInfo = userData?.sites.filter(site => site.siteID === siteID)[0];
+    console.log('setting newSiteData', newSiteData);
+    setSiteData(newSiteData);
+  }
+
   useLayoutEffect(() => {
     window.addEventListener('load', () => {
       console.warn('setting loading false');
@@ -62,9 +78,16 @@ export default function App() {
     })
   }, []);
 
-  useEffect(() => {    
+  useEffect(() => {
     checkForLoggedInUser();
   }, []);
+
+  const orderedSectionList = siteData ? Object.values(Object.values(siteData.sections).filter(x => typeof x === 'object').sort((a, b) => a.order - b.order)) : null;
+  
+  const parsedEpoch = (epoch: number) => {
+    const date = new Date(epoch);
+    return date.toLocaleString();
+  }
 
   return (
     <MantineProvider theme={theme}>
@@ -89,18 +112,24 @@ export default function App() {
               backgroundColor: theme.black
             }
           })}
-        >
-          <Title order={2}>
-            Header Title
-          </Title>
-          <Button
-            autoContrast
-            color='#90000077'
-            size={'compact-xs'}
-            onClick={() => { signUserOut(); setUserData(null); setSiteData(null); resetUI() }}
-          >
-            Sign out
-          </Button>
+        >          
+          {userData ?
+            <>
+              <Text size='xs'>{userData.username} is {siteData ? 'editing ' + siteData.metaInfo.siteName : 'logged in'}</Text>
+              <Button
+                autoContrast
+                color='#90000077'
+                size={'compact-xs'}
+                onClick={() => { signUserOut(); setUserData(null); setSiteData(null); resetUI() }}
+              >
+                Sign out
+              </Button>
+            </>
+            :
+            <Title order={2}>
+              Header Title
+            </Title>
+          }
         </AppShell.Header>
         <AppShell.Main>
           {siteData ?
@@ -109,7 +138,7 @@ export default function App() {
               direction={'column'}
               gap={'0.2rem'}
             >
-              {Object.values(FAKE_SITE_DATA_SECTIONS).map(section => (
+              {orderedSectionList?.map(section => (
                 <InputSection
                   key={section.href}
                   sectionData={section}
@@ -118,22 +147,32 @@ export default function App() {
             </Flex>
             :
             userData ?
-              <Paper
-                withBorder
-                shadow="md"
-                p="sm"
-                styles={theme => ({
-                  root: {
-                    backgroundColor: theme.colors.dark[8],
-                    color: theme.white,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }
-                })}
-              >
-                <h2>{userData.displayName} is logged in!</h2>
-              </Paper>
+              <Center>
+                <Text size='lg' style={{ textAlign: 'center', margin: '1rem 0' }}>Choose site</Text>
+                <Paper
+                  withBorder
+                  shadow="md"
+                  p="sm"
+                  styles={theme => ({
+                    root: {
+                      backgroundColor: theme.colors.dark[8],
+                      color: theme.white,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      margin: '1rem'
+                    }
+                  })}
+                >
+                  {userData.sites.map(({ siteName, siteUrl, siteID, lastEdited }) =>
+                    <div onClick={() => handleSelectUserSite(siteID)} key={siteName}>
+                      <div>{siteName}</div>
+                      <div>{siteUrl}</div>
+                      <small>Last edited: {parsedEpoch(lastEdited)}</small>
+                    </div>
+                  )}
+                </Paper>
+              </Center>
               : !loading ?
                 <LoginWindow opened={(!userData && !siteData)} />
                 :
