@@ -29,12 +29,12 @@ import { useEffect, useLayoutEffect, useState } from 'react';
 import { initApp, resetUI, signUserOut, startUI } from '../firebase';
 
 import { User } from 'firebase/auth';
-import { SiteContentData, UserData } from './types';
+import { SiteContentData, SiteMetaInfo, UserData } from './types';
 import { LoginWindow } from './components/LoginWindow';
 import { getSiteData, getSiteMetaInfo, getUserAuthorizedSites, getUserInfo, saveAll } from './util/db';
-import { useSiteData } from './context/SiteDataContext';
 import { ConfirmModal } from './components/ConfirmModal';
 import { Notifications, notifications } from '@mantine/notifications';
+import { useSiteData } from './hooks/SiteData';
 
 
 export default function App() {
@@ -65,10 +65,10 @@ export default function App() {
         // const userInfo = await getUserInfo(signedInUser.uid);
         const userInfo = await getUserInfo('SusanAuthId');
         const userSiteIDs = await getUserAuthorizedSites('SusanAuthId');
-        const sites = [] as any;
+        const sites = [] as SiteMetaInfo[];
 
         for (const siteID in userSiteIDs) {
-          if (userSiteIDs.hasOwnProperty(siteID)) {
+          if (siteID in userSiteIDs) {
             const metaInfo = await getSiteMetaInfo(siteID);
             sites.push({ ...userSiteIDs[siteID], ...metaInfo, siteID });
           }
@@ -91,7 +91,7 @@ export default function App() {
     const startTime = Date.now();
     const newSiteData = await getSiteData(siteID, 'testData');
     const dbTime = Date.now() - startTime;
-    newSiteData.metaInfo = userData?.sites.filter(site => site.siteID === siteID)[0];
+    newSiteData.metaInfo = userData?.sites.filter(site => site.siteID === siteID)[0] as SiteMetaInfo;
     notifications.show({
       message: `Loaded ${newSiteData.metaInfo.siteName} in ${dbTime}ms`,
       icon: <CheckIcon size={'1.25rem'} />,

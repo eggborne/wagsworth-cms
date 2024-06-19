@@ -1,5 +1,5 @@
 import { AccordionChevron, Container, Collapse, Flex, TextInput, Textarea, Title, Divider, Text, Button, Group, NumberInput, Checkbox, Input } from "@mantine/core"
-import { ContactInfo, SectionData, SiteContentData } from "../types"
+import { ContactInfo, SectionData } from "../types"
 import { useDisclosure } from "@mantine/hooks"
 import { ServicePriceList } from "./ServicePriceList";
 import { useState } from "react";

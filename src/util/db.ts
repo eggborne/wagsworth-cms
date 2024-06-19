@@ -1,4 +1,4 @@
-import { SiteContentData } from "../types";
+import { SiteContentData, SiteMetaInfo, UserAuthorizedSiteInfo, UserData } from "../types";
 
 const API_BASE_URL = 'https://firebase-backend-beis.onrender.com/api';
 
@@ -16,15 +16,15 @@ async function fetchData<T>(url: string, options?: RequestInit): Promise<T> {
   }
 }
 
-interface PatchSiteDataParams {
+interface PatchSiteDataParams<T> {
   siteID: string;
   environment: string;
   path: string;
-  newValue: any;
+  newValue: T;
 }
 
 // Function to send a PATCH request to update site data
-async function patchSiteData({ siteID, environment, path, newValue }: PatchSiteDataParams): Promise<void> {
+async function patchSiteData<T>({ siteID, environment, path, newValue }: PatchSiteDataParams<T>): Promise<void> {
   const encodedPath = encodeURIComponent(path); // Encoding to handle special characters in URL
   const url = `${API_BASE_URL}/site/${siteID}/${environment}/${encodedPath}`;
 
@@ -46,28 +46,28 @@ async function patchSiteData({ siteID, environment, path, newValue }: PatchSiteD
   }
 }
 
-async function getUserInfo(userID: string): Promise<any> {
+async function getUserInfo(userID: string): Promise<UserData> {
   const url = `${API_BASE_URL}/user/${userID}`;
-  return fetchData<any>(url);
+  return fetchData<UserData>(url);
 }
 
-async function getUserAuthorizedSites(userID: string): Promise<any> {
+async function getUserAuthorizedSites(userID: string): Promise<UserAuthorizedSiteInfo> {
   const url = `${API_BASE_URL}/user/${userID}/sites`;
-  return fetchData<any>(url);
+  return fetchData<UserAuthorizedSiteInfo>(url);
 }
 
-async function getSiteMetaInfo(siteID: string): Promise<any> {
+async function getSiteMetaInfo(siteID: string): Promise<SiteMetaInfo> {
   const url = `${API_BASE_URL}/site/${siteID}/metaInfo/`;
-  return fetchData<any>(url);
+  return fetchData<SiteMetaInfo>(url);
 }
 
-async function getSiteData(siteID: string, path: string): Promise<any> {
+async function getSiteData(siteID: string, path: string): Promise<SiteContentData> {
   const encodedPath = encodeURIComponent(path); // Ensure the path is URL-safe
   const url = `${API_BASE_URL}/site/${siteID}/${encodedPath}/`;
-  return fetchData<any>(url);
+  return fetchData<SiteContentData>(url);
 }
 
-async function patchTestSite(path: string, newValue: any): Promise<boolean> {
+async function patchTestSite<T>(path: string, newValue: T): Promise<boolean> {
   try {
     patchSiteData({
       siteID: 'WagsworthSiteID',

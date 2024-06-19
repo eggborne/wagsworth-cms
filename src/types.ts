@@ -90,6 +90,13 @@ interface RequirementsData extends SectionData {
 
 interface ContactData extends SectionData { }
 
+interface SiteMetaInfo {
+  siteName: string,
+  siteUrl: string,
+  siteID: string,
+  lastEdited : number,
+}
+
 interface SiteContentData {
   contactInfo: ContactInfo;
   homePage: HomePageData;
@@ -99,10 +106,7 @@ interface SiteContentData {
     socialLinks: Record<string, ImageMetadata>;
     ui: Record<string, ImageMetadata>;
   };
-  metaInfo: {
-    siteName: string,
-    siteUrl: string,
-  },
+  metaInfo: SiteMetaInfo,
   sections: {
     [key: string]: SectionData | ServicesData | AboutData | FAQsData | RequirementsData | ContactData;
   };
@@ -138,6 +142,6 @@ interface UserData {
 }
 
 export type {
-  UserData, Slide, PricedService, UserAuthorizedSiteInfo, FullSiteData, ServicesData, SiteContentData, AboutData, FAQsData, RequirementsData, ContactData,
+  UserData, Slide, PricedService, SiteMetaInfo, UserAuthorizedSiteInfo, FullSiteData, ServicesData, SiteContentData, AboutData, FAQsData, RequirementsData, ContactData,
   HomePageData, HeadLineBodySet, ContactInfo, SectionData, NavItem, ImageMetadata
 };
