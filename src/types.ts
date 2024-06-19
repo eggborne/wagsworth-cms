@@ -64,12 +64,12 @@ interface SectionData {
   note?: Paragraph[];
   order: number;
   bannerImage?: ImageMetadata;
-  slides?: Slide[];
-  textContent?: Paragraph[];
-  pricedServices?: PricedService[];
-  pricedServicesLabel?: string;
-  questions?: HeadLineBodySet[];
-  requirements?: HeadLineBodySet[];
+  slides: Slide[];
+  textContent: Paragraph[];
+  pricedServices: PricedService[];
+  pricedServicesLabel: string;
+  questions: HeadLineBodySet[];
+  requirements: HeadLineBodySet[];
 }
 
 interface ServicesData extends SectionData {
@@ -138,6 +138,6 @@ interface UserData {
 }
 
 export type {
-  UserData, Slide, UserAuthorizedSiteInfo, FullSiteData, ServicesData, SiteContentData, AboutData, FAQsData, RequirementsData, ContactData,
+  UserData, Slide, PricedService, UserAuthorizedSiteInfo, FullSiteData, ServicesData, SiteContentData, AboutData, FAQsData, RequirementsData, ContactData,
   HomePageData, HeadLineBodySet, ContactInfo, SectionData, NavItem, ImageMetadata
 };

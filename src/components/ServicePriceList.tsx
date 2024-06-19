@@ -1,4 +1,5 @@
 import { Flex, NumberInput, TextInput } from "@mantine/core"
+import { SectionData } from "../types";
 
 interface ServicePriceListProps {
   pricedServices: {
@@ -6,9 +7,10 @@ interface ServicePriceListProps {
     price: number
   }[],
   pricedServicesLabel?: string;
+  updateSectionData: (updatedSectionData: Partial<SectionData>) => void;
 }
 
-export const ServicePriceList = ({ pricedServices, pricedServicesLabel }: ServicePriceListProps) => {
+export const ServicePriceList = ({ pricedServices, pricedServicesLabel, updateSectionData }: ServicePriceListProps) => {
   return (
     <Flex
       display={'flex'}
@@ -22,6 +24,7 @@ export const ServicePriceList = ({ pricedServices, pricedServicesLabel }: Servic
         styles={{
           input: { width: '80%', padding: '1rem 0.5rem', fontSize: '1.1rem', fontWeight: 'bold' }
         }}
+        onChange={(e) => updateSectionData({ pricedServicesLabel: e.currentTarget.value })}
       />
       {pricedServices.map((pricedService, p) =>
         <Flex
@@ -42,6 +45,12 @@ export const ServicePriceList = ({ pricedServices, pricedServicesLabel }: Servic
               root: { flexGrow: '2' },
               input: { textAlign: 'center', padding: '0.25rem 0.5rem', fontSize: '1rem', fontWeight: 'bold' }
             }}
+            onChange={(e) => {
+              console.log('e', e)
+              const updatedPricedServices = [...pricedServices]
+              updatedPricedServices[p].name = e.currentTarget.value
+              updateSectionData({ pricedServices: updatedPricedServices })
+            }}
           />
           <NumberInput
             placeholder={'$' + pricedService.price}
@@ -55,6 +64,11 @@ export const ServicePriceList = ({ pricedServices, pricedServicesLabel }: Servic
               root: { flexGrow: '0' },
               input: { textAlign: 'center', padding: '0', margin: '0', fontSize: '1.2rem', fontWeight: 'bold' },
               section: { display: 'none' }
+            }}
+            onChange={value => {
+              const updatedPricedServices = [...pricedServices];
+              updatedPricedServices[p].price = value as number;
+              updateSectionData({ pricedServices: updatedPricedServices })
             }}
           />
         </Flex>

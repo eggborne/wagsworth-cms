@@ -88,15 +88,20 @@ export default function App() {
   };
 
   const handleSelectUserSite = async (siteID: string) => {
+    const startTime = Date.now();
     const newSiteData = await getSiteData(siteID, 'testData');
+    const dbTime = Date.now() - startTime;
     newSiteData.metaInfo = userData?.sites.filter(site => site.siteID === siteID)[0];
+    notifications.show({
+      message: `Loaded ${newSiteData.metaInfo.siteName} in ${dbTime}ms`,
+      icon: <CheckIcon size={'1.25rem'} />,
+      color: 'green',
+    });
     console.log('setting newSiteData', newSiteData);
     setSiteData(newSiteData);
   }
 
-  // const orderedSectionList = siteData ? Object.values(Object.values(siteData.sections).filter(x => typeof x === 'object').sort((a, b) => a.order - b.order)) : null;
-
-  // console.log('created section list', orderedSectionList);
+  const orderedSectionList = siteData ? Object.values(Object.values(siteData.sections).filter(x => typeof x === 'object').sort((a, b) => a.order - b.order)) : null;
 
   const parsedEpoch = (epoch: number) => {
     const date = new Date(epoch);
@@ -138,7 +143,7 @@ export default function App() {
           }
         })}
       >
-        <Notifications position='top-center' autoClose={3000} />
+        <Notifications position='top-center' autoClose={2000} notificationMaxHeight={'3.5rem'} />
         <AppShell.Header styles={theme => ({ header: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1rem', backgroundColor: theme.black } })} >
           {userData ?
             <>
@@ -159,8 +164,8 @@ export default function App() {
         <AppShell.Main>
           {siteData ?
             <>
-              <Flex display={'flex'} direction={'column'} gap={'0.2rem'} >
-                {Object.values(Object.values(siteData.sections).filter(x => typeof x === 'object').sort((a, b) => a.order - b.order))?.map(section => (
+              <Flex display={'flex'} direction={'column'} gap={'0.2rem'}>
+                {orderedSectionList?.map(section => (
                   <InputSection
                     key={section.href}
                     sectionData={section}
