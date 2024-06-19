@@ -138,6 +138,6 @@ interface UserData {
 }
 
 export type {
-  UserData, UserAuthorizedSiteInfo, FullSiteData, ServicesData, SiteContentData, AboutData, FAQsData, RequirementsData, ContactData,
+  UserData, Slide, UserAuthorizedSiteInfo, FullSiteData, ServicesData, SiteContentData, AboutData, FAQsData, RequirementsData, ContactData,
   HomePageData, HeadLineBodySet, ContactInfo, SectionData, NavItem, ImageMetadata
 };

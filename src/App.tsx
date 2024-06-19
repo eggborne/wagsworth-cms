@@ -16,6 +16,11 @@ import '@mantine/core/styles/Paper.css';
 import '@mantine/core/styles/Input.css';
 import '@mantine/core/styles/Text.css';
 import '@mantine/core/styles/Divider.css';
+import '@mantine/core/styles/Checkbox.css';
+import '@mantine/core/styles/Notification.layer.css';
+import '@mantine/core/styles/Notification.css';
+import '@mantine/notifications/styles.css';
+
 
 import { AppShell, Button, Center, CheckIcon, CloseIcon, Flex, MantineProvider, Paper, Text, Title } from "@mantine/core";
 import { theme } from "./theme";
@@ -26,13 +31,32 @@ import { initApp, resetUI, signUserOut, startUI } from '../firebase';
 import { User } from 'firebase/auth';
 import { SiteContentData, UserData } from './types';
 import { LoginWindow } from './components/LoginWindow';
-import { getSiteData, getSiteMetaInfo, getUserAuthorizedSites, getUserInfo } from './util/db';
+import { getSiteData, getSiteMetaInfo, getUserAuthorizedSites, getUserInfo, saveAll } from './util/db';
+import { useSiteData } from './context/SiteDataContext';
+import { ConfirmModal } from './components/ConfirmModal';
+import { Notifications, notifications } from '@mantine/notifications';
 
 
 export default function App() {
   const [loading, setLoading] = useState(true);
   const [userData, setUserData] = useState<UserData | null>(null);
-  const [siteData, setSiteData] = useState<SiteContentData | null>(null);
+  const [modalShowing, setModalShowing] = useState<string | null>(null);
+  const { siteData, setSiteData } = useSiteData();
+
+  useLayoutEffect(() => {
+    window.addEventListener('load', () => {
+      console.warn('setting loading false');
+      setLoading(false);
+    })
+  }, []);
+
+  useEffect(() => {
+    checkForLoggedInUser();
+  }, []);
+
+  useEffect(() => {
+    console.warn('SITE DATA CHANGED!')
+  }, [siteData]);
 
   const checkForLoggedInUser = async () => {
     try {
@@ -54,7 +78,6 @@ export default function App() {
           uid: signedInUser.uid,
           sites,
         }
-        console.log('setting user to', userData);
         setUserData(userData);
       } else {
         startUI();
@@ -71,23 +94,36 @@ export default function App() {
     setSiteData(newSiteData);
   }
 
-  useLayoutEffect(() => {
-    window.addEventListener('load', () => {
-      console.warn('setting loading false');
-      setLoading(false);
-    })
-  }, []);
+  // const orderedSectionList = siteData ? Object.values(Object.values(siteData.sections).filter(x => typeof x === 'object').sort((a, b) => a.order - b.order)) : null;
 
-  useEffect(() => {
-    checkForLoggedInUser();
-  }, []);
-
-  const orderedSectionList = siteData ? Object.values(Object.values(siteData.sections).filter(x => typeof x === 'object').sort((a, b) => a.order - b.order)) : null;
+  // console.log('created section list', orderedSectionList);
 
   const parsedEpoch = (epoch: number) => {
     const date = new Date(epoch);
     return date.toLocaleString();
   }
+
+  const handleConfirmSaveAll = async (newSiteData: SiteContentData) => {
+    const startTime = Date.now();
+    const saveResult = await saveAll(newSiteData);
+    if (saveResult) {
+      const dbTime = Date.now() - startTime;
+      notifications.show({
+        title: 'Update saved!',
+        message: `took ${dbTime}ms`,
+        icon: <CheckIcon size={'1.25rem'} />,
+        color: 'green',
+      });
+    } else {
+      notifications.show({
+        title: 'Update failed :(',
+        message: `something done gone wrong`,
+        icon: <CloseIcon size={'1.25rem'} />,
+        color: 'red',
+      });
+    }
+    setModalShowing(null);
+  };
 
   return (
     <MantineProvider theme={theme}>
@@ -102,71 +138,48 @@ export default function App() {
           }
         })}
       >
-        <AppShell.Header
-          styles={theme => ({
-            header: {
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '0 1rem',
-              backgroundColor: theme.black
-            }
-          })}
-        >
+        <Notifications position='top-center' autoClose={3000} />
+        <AppShell.Header styles={theme => ({ header: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1rem', backgroundColor: theme.black } })} >
           {userData ?
             <>
-              <Flex
-                display={'flex'}
-                direction={'column'}
-              >
+              <Flex display={'flex'} direction={'column'} >
                 <Text size='xs'>{userData.username} is {siteData ? 'editing ' + siteData.metaInfo.siteName : 'logged in'}</Text>
                 {siteData && <Text size='xs' c={'#ffffff77'}>{siteData.metaInfo.siteUrl}</Text>}
               </Flex>
-              <Button
-                autoContrast
-                color='#90000077'
-                size={'compact-xs'}
-                onClick={() => { signUserOut(); setUserData(null); setSiteData(null); resetUI() }}
-              >
+              <Button autoContrast color='#90000077' size={'compact-xs'} onClick={() => { signUserOut(); setUserData(null); setSiteData(null); resetUI() }} >
                 Sign out
               </Button>
             </>
             :
-            <Title order={2}>
+            <Title order={3}>
               Wagsworth CMS
             </Title>
           }
         </AppShell.Header>
         <AppShell.Main>
           {siteData ?
-            <Flex display={'flex'} direction={'column'} gap={'0.2rem'} >
-              {orderedSectionList?.map(section => (
-                <InputSection
-                  key={section.href}
-                  sectionData={section}
-                  contactInfo={section.order === 5 ? siteData.contactInfo : undefined}
-                />
-              ))}
-            </Flex>
+            <>
+              <Flex display={'flex'} direction={'column'} gap={'0.2rem'} >
+                {Object.values(Object.values(siteData.sections).filter(x => typeof x === 'object').sort((a, b) => a.order - b.order))?.map(section => (
+                  <InputSection
+                    key={section.href}
+                    sectionData={section}
+                    contactInfo={section.order === 5 ? siteData.contactInfo : undefined}
+                  />
+                ))}
+              </Flex>
+              <ConfirmModal
+                opened={modalShowing === 'confirmSaveAll'}
+                title={'Really save it for real?'}
+                confirmAction={() => handleConfirmSaveAll(siteData)}
+                cancelAction={() => setModalShowing(null)}
+              />
+            </>
             :
             userData ?
               <Center>
                 <Text size='lg' style={{ textAlign: 'center', margin: '1rem 0' }}>Choose site</Text>
-                <Paper
-                  withBorder
-                  shadow="md"
-                  p="sm"
-                  styles={theme => ({
-                    root: {
-                      backgroundColor: theme.colors.dark[8],
-                      color: theme.white,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      margin: '1rem'
-                    }
-                  })}
-                >
+                <Paper withBorder shadow="md" p="sm" styles={theme => ({ root: { backgroundColor: theme.colors.dark[8], color: theme.white, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '1rem' } })} >
                   {userData.sites.map(({ siteName, siteUrl, siteID, lastEdited }) =>
                     <div onClick={() => handleSelectUserSite(siteID)} key={siteName}>
                       <div>{siteName}</div>
@@ -185,33 +198,15 @@ export default function App() {
           }
 
         </AppShell.Main>
-        <AppShell.Footer
-          styles={theme => ({
-            footer: {
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '1rem',
-              backgroundColor: theme.colors.headerBackgroundColor[0],
-            }
-          })}
-        >
-          <Button
-            autoContrast
-            leftSection={<CloseIcon size={'14'} />}
-            variant='gradient'
-            gradient={{ from: 'pink', to: 'red', deg: 135 }}
-            style={{ width: '40%' }}
-          >
+        <AppShell.Footer styles={theme => ({ footer: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', backgroundColor: theme.colors.headerBackgroundColor[0], } })} >
+          <Button autoContrast leftSection={<CloseIcon size={'14'} />} variant='gradient' gradient={{ from: 'pink', to: 'red', deg: 135 }} style={{ width: '40%' }} >
             Revert
           </Button>
           <Button
-            autoContrast
-            rightSection={<CheckIcon size={'14'} />}
-            variant='gradient'
-            gradient={{ from: 'teal', to: 'lime', deg: 135 }}
-            style={{ width: '40%' }}
-          >
+            onClick={() => {
+              setModalShowing('confirmSaveAll');
+            }}
+            autoContrast rightSection={<CheckIcon size={'14'} />} variant='gradient' gradient={{ from: 'teal', to: 'lime', deg: 135 }} style={{ width: '40%' }} >
             Save
           </Button>
         </AppShell.Footer>
