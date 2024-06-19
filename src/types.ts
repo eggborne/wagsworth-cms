@@ -15,14 +15,9 @@ interface Slide {
   backgroundColor: Color;
 }
 
-interface Requirement {
+interface HeadLineBodySet {
   headline: string;
   bodyText: Paragraph[];
-}
-
-interface Question {
-  question: string;
-  answer: Paragraph[];
 }
 
 interface HomePageData {
@@ -73,6 +68,8 @@ interface SectionData {
   textContent?: Paragraph[];
   pricedServices?: PricedService[];
   pricedServicesLabel?: string;
+  questions?: HeadLineBodySet[];
+  requirements?: HeadLineBodySet[];
 }
 
 interface ServicesData extends SectionData {
@@ -84,11 +81,11 @@ interface ServicesData extends SectionData {
 interface AboutData extends SectionData { }
 
 interface FAQsData extends SectionData {
-  questions: Question[];
+  questions: HeadLineBodySet[];
 }
 
 interface RequirementsData extends SectionData {
-  requirements: Requirement[];
+  requirements: HeadLineBodySet[];
 }
 
 interface ContactData extends SectionData { }
@@ -142,5 +139,5 @@ interface UserData {
 
 export type {
   UserData, UserAuthorizedSiteInfo, FullSiteData, ServicesData, SiteContentData, AboutData, FAQsData, RequirementsData, ContactData,
-  HomePageData, ContactInfo, SectionData, NavItem, ImageMetadata
+  HomePageData, HeadLineBodySet, ContactInfo, SectionData, NavItem, ImageMetadata
 };

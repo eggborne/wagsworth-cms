@@ -24,7 +24,7 @@ import { useEffect, useLayoutEffect, useState } from 'react';
 import { initApp, resetUI, signUserOut, startUI } from '../firebase';
 
 import { User } from 'firebase/auth';
-import { SectionData, SiteContentData, UserData } from './types';
+import { SiteContentData, UserData } from './types';
 import { LoginWindow } from './components/LoginWindow';
 import { getSiteData, getSiteMetaInfo, getUserAuthorizedSites, getUserInfo } from './util/db';
 
@@ -65,7 +65,7 @@ export default function App() {
   };
 
   const handleSelectUserSite = async (siteID: string) => {
-    const newSiteData = await getSiteData(siteID, 'liveData');
+    const newSiteData = await getSiteData(siteID, 'testData');
     newSiteData.metaInfo = userData?.sites.filter(site => site.siteID === siteID)[0];
     console.log('setting newSiteData', newSiteData);
     setSiteData(newSiteData);
@@ -83,7 +83,7 @@ export default function App() {
   }, []);
 
   const orderedSectionList = siteData ? Object.values(Object.values(siteData.sections).filter(x => typeof x === 'object').sort((a, b) => a.order - b.order)) : null;
-  
+
   const parsedEpoch = (epoch: number) => {
     const date = new Date(epoch);
     return date.toLocaleString();
@@ -93,7 +93,7 @@ export default function App() {
     <MantineProvider theme={theme}>
       <AppShell
         layout='alt'
-        header={{ height: '4rem', }}
+        header={{ height: '3.5rem', }}
         footer={{ height: '6rem' }}
         styles={theme => ({
           root: {
@@ -112,10 +112,16 @@ export default function App() {
               backgroundColor: theme.black
             }
           })}
-        >          
+        >
           {userData ?
             <>
-              <Text size='xs'>{userData.username} is {siteData ? 'editing ' + siteData.metaInfo.siteName : 'logged in'}</Text>
+              <Flex
+                display={'flex'}
+                direction={'column'}
+              >
+                <Text size='xs'>{userData.username} is {siteData ? 'editing ' + siteData.metaInfo.siteName : 'logged in'}</Text>
+                {siteData && <Text size='xs' c={'#ffffff77'}>{siteData.metaInfo.siteUrl}</Text>}
+              </Flex>
               <Button
                 autoContrast
                 color='#90000077'
@@ -127,21 +133,18 @@ export default function App() {
             </>
             :
             <Title order={2}>
-              Header Title
+              Wagsworth CMS
             </Title>
           }
         </AppShell.Header>
         <AppShell.Main>
           {siteData ?
-            <Flex
-              display={'flex'}
-              direction={'column'}
-              gap={'0.2rem'}
-            >
+            <Flex display={'flex'} direction={'column'} gap={'0.2rem'} >
               {orderedSectionList?.map(section => (
                 <InputSection
                   key={section.href}
                   sectionData={section}
+                  contactInfo={section.order === 5 ? siteData.contactInfo : undefined}
                 />
               ))}
             </Flex>
